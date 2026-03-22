@@ -1,0 +1,40 @@
+name: JD Price Bot
+on:
+  # 触发方式1：手动触发（测试用）
+  workflow_dispatch:
+  # 触发方式2：Webhook触发（飞书消息触发）
+  repository_dispatch:
+    types: [feishu_message]
+  # 触发方式3：定时运行（可选，保活）
+  schedule:
+    - cron: '0 */2 * * *'
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 设置Python环境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          # 安装Chrome（GitHub Actions Ubuntu环境）
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser chromium-chromedriver
+      
+      - name: 启动服务
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+          JD_COOKIE: ${{ secrets.JD_COOKIE }}
+        run: |
+          # 后台启动Flask服务
+          python main.py &
+          # 保持服务运行（GitHub Actions会持续运行）
+          sleep 3600  # 运行1小时，可根据需要调整
