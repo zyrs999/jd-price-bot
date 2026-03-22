@@ -1,0 +1,9 @@
+requests
+beautifulsoup4
+lxml
+selenium
+webdriver-manager
+python-dotenv
+pillow
+flask  # 用于接收飞书Webhook触发
+ngrok  # 内网穿透（可选，用于本地测试）
