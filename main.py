@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import random  # 新增：用于随机UA和延迟
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -37,18 +38,30 @@ def parse_server_config(text):
     return result
 
 def jd_search(keyword):
-    """京东搜索，返回前3个匹配商品"""
+    """京东搜索，返回前3个匹配商品（新增防限流优化）"""
     url = f"https://search.jd.com/Search"
     params = {
         'keyword': keyword,
         'enc': 'utf-8',
         'page': 1
     }
+    
+    # 新增：随机User-Agent列表（防限流）
+    user_agents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/119.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/118.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36"
+    ]
+    
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
-        'Cookie': os.getenv("JD_COOKIE", "")  # 可选，避免限流
+        'User-Agent': random.choice(user_agents),  # 随机选择UA
+        'Cookie': os.getenv("JD_COOKIE", "")  # 可选Cookie，不填也能用
     }
+    
     try:
+        # 新增：随机延迟1-3秒（防高频请求限流）
+        time.sleep(random.uniform(1, 3))
         resp = requests.get(url, params=params, headers=headers, timeout=10)
         resp.encoding = 'utf-8'
         soup = BeautifulSoup(resp.text, 'lxml')
